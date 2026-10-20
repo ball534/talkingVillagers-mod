@@ -204,13 +204,21 @@ public final class OllamaService implements AutoCloseable {
 	private String buildBody(LlmRequest request, TalkingVillagersConfig config) {
 		JsonObject options = new JsonObject();
 		options.addProperty("temperature", config.ollama.temperature);
-		options.addProperty("num_predict", config.ollama.maxTokens);
+		// The token limit covers a thinking model's reasoning as well as its speech, so while
+		// thinking is on the budget is raised by a fixed headroom — max_tokens keeps meaning
+		// "the reply" rather than "whatever got generated first".
+		options.addProperty("num_predict", config.ollama.maxTokens
+			+ (config.ollama.thinking ? Tuning.Ollama.THINKING_HEADROOM : 0));
 
 		JsonObject body = new JsonObject();
 		body.addProperty("model", config.ollama.model);
 		body.addProperty("system", request.system());
 		body.addProperty("prompt", request.user());
 		body.addProperty("stream", false);
+		// Thinking models reason before they answer, which Ollama files under a separate
+		// "thinking" field; left on with a tight budget it starves "response" and the villager
+		// says nothing. Explicit, because models differ in whether they think by default.
+		body.addProperty("think", config.ollama.thinking);
 		// Ask Ollama to keep the model resident. Villages speak in bursts with long silences,
 		// and Ollama's five-minute default eviction means the villager who breaks a lull would
 		// otherwise wait out a full model load and time out.
@@ -226,6 +234,12 @@ public final class OllamaService implements AutoCloseable {
 			if (json.has("error")) {
 				TalkingVillagers.LOGGER.warn("Ollama reported an error: {}", json.get("error").getAsString());
 				return "";
+			}
+			// A thinking model's reasoning, when there was any — debug-only, since it is the
+			// fastest way to see why a villager answered the way they did.
+			if (json.has("thinking") && !json.get("thinking").getAsString().isBlank()) {
+				TalkingVillagers.LOGGER.debug("A villager's unspoken thoughts: {}",
+					json.get("thinking").getAsString());
 			}
 			if (!json.has("response")) {
 				return "";

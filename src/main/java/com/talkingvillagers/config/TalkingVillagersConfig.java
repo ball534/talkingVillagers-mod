@@ -81,6 +81,8 @@ public final class TalkingVillagersConfig {
 	public static final class Ollama {
 		public final String baseUrl;
 		public final String model;
+		/** Whether thinking models may reason before answering. No effect on models that cannot. */
+		public final boolean thinking;
 		public final int timeoutMs;
 		public final int maxTokens;
 		public final double temperature;
@@ -95,6 +97,7 @@ public final class TalkingVillagersConfig {
 		private Ollama(Lookup l) {
 			this.baseUrl = stripTrailingSlash(l.string("ollama.base_url"));
 			this.model = l.string("ollama.model");
+			this.thinking = l.bool("ollama.thinking");
 			this.timeoutMs = l.intAtLeast("ollama.timeout_ms", 100);
 			this.maxTokens = l.intAtLeast("ollama.max_tokens", 1);
 			this.temperature = l.doubleValue("ollama.temperature");

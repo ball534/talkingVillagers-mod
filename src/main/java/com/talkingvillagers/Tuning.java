@@ -36,6 +36,19 @@ public final class Tuning {
 		 */
 		public static final String KEEP_ALIVE = "30m";
 
+		/**
+		 * Extra tokens granted on top of {@code max_tokens} while thinking is enabled.
+		 *
+		 * <p>Ollama's token limit covers the model's reasoning as well as its answer, so a
+		 * thinking model left with only the speech budget spends all of it reasoning and the
+		 * answer comes back empty. Measured on a 2B thinking model, a one-sentence villager
+		 * reply cost over 1300 tokens of deliberation first — prompt instructions to think
+		 * briefly trimmed that by barely a quarter — so the headroom is sized to let even a
+		 * ruminative model finish. It is deliberately not configurable: it is what keeps
+		 * {@code max_tokens} meaning "the reply", whatever the model does first.
+		 */
+		public static final int THINKING_HEADROOM = 2048;
+
 		private Ollama() {
 		}
 	}
@@ -77,6 +90,9 @@ public final class Tuning {
 	public static final class Conversation {
 		/** Height of floating text above the speaker's feet, in blocks. */
 		public static final double OVERHEAD_HEIGHT_OFFSET = 2.4;
+
+		/** Ticks between steps of the "thinking" dots shown while a villager composes a reply. */
+		public static final int THINKING_FLICK_INTERVAL_TICKS = 10;
 
 		/** A conversation with no messages for this long ends by itself. */
 		public static final int SESSION_TIMEOUT_TICKS = 600;

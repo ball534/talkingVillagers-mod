@@ -8,9 +8,9 @@ yourself.
 on your own machine. If Ollama is slow or missing, villagers simply go quiet; the server never
 blocks waiting on it.
 
-- **Minecraft** 26.2
-- **Loader** Fabric ≥ 0.19.3, Fabric API, Java 25
-- **Version** 1.0.0
+- **Minecraft** 26.3
+- **Loader** Fabric ≥ 0.19.5, Fabric API, Java 25
+- **Version** 2.1.0
 
 ## Vanilla clients can join
 
@@ -56,6 +56,10 @@ The mod adds **no commands at all**. Everything happens by playing.
 | **Walk into a village** | A title with the village's name and how many live there |
 | Say *bye*, walk more than `max_distance` away, or stay quiet 30 s | The conversation ends |
 
+While a villager is composing an answer, `Nils is thinking…` floats over their head until the
+reply arrives. Thinking models may reason first (`ollama.thinking`), which makes replies more in
+character at the cost of a short wait.
+
 Both books work with a plain `minecraft:book` or with one the mod already wrote (which rewrites it,
 so a record is never stuck stale). Books are snapshots — they do not update on their own.
 
@@ -95,7 +99,7 @@ default, so the file is safe to trim.
 | Section | Settings |
 |---|---|
 | `[names]` | The name pools — male and female first names, surnames, and settlement name prefixes/suffixes. Ships with Swedish names |
-| `[ollama]` | `base_url`, `model`, `timeout_ms`, `max_tokens`, `temperature`, `queue_capacity`, `health_check_interval_ticks`, `relationship_cap` |
+| `[ollama]` | `base_url`, `model`, `thinking`, `timeout_ms`, `max_tokens`, `temperature`, `queue_capacity`, `health_check_interval_ticks`, `relationship_cap` |
 | `[sexuality]` | `enable_sexuality` — false makes every villager heterosexual |
 | `[conversation]` | `display` (`overhead` / `chat` / `both`), `overhead_duration_ticks`, `max_distance`, `particles_while_talking` |
 | `[needs]` | `food_enabled` — whether settlements have to feed themselves |
@@ -121,11 +125,12 @@ No EULA is needed for that — that only gates `runServer`.
 
 ## Notes for contributors
 
-Minecraft 26.2 dropped Yarn mappings, so this builds against **Mojang official mappings** and
-`build.gradle` has no `mappings` line. Writing villager or entity code from 1.20/1.21 memory
-produces code that does not compile, or worse, compiles and fails at runtime.
+Minecraft 26.2 dropped Yarn mappings, and 26.3 keeps it that way, so this builds against **Mojang
+official mappings** and `build.gradle` has no `mappings` line. Writing villager or entity code from
+1.20/1.21 memory produces code that does not compile, or worse, compiles and fails at runtime.
 
-`docs/mc-26.2-api-notes.md` records every API difference already found the hard way — read it before
+`docs/mc-26.2-api-notes.md` records every API difference already found the hard way, plus the 26.3
+deltas found during the port — read it before
 writing new code, and add to it rather than re-deriving. Ground truth comes from `./gradlew
 genSources`, which puts decompiled sources under
 `.gradle/loom-cache/minecraftMaven/net/minecraft/`.
