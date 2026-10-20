@@ -10,7 +10,7 @@ blocks waiting on it.
 
 - **Minecraft** 26.3
 - **Loader** Fabric ≥ 0.19.5, Fabric API, Java 25
-- **Version** 2.0.0
+- **Version** 2.1.0
 
 ## Vanilla clients can join
 
@@ -56,6 +56,10 @@ The mod adds **no commands at all**. Everything happens by playing.
 | **Walk into a village** | A title with the village's name and how many live there |
 | Say *bye*, walk more than `max_distance` away, or stay quiet 30 s | The conversation ends |
 
+While a villager is composing an answer, `Nils is thinking…` floats over their head until the
+reply arrives. Thinking models may reason first (`ollama.thinking`), which makes replies more in
+character at the cost of a short wait.
+
 Both books work with a plain `minecraft:book` or with one the mod already wrote (which rewrites it,
 so a record is never stuck stale). Books are snapshots — they do not update on their own.
 
@@ -95,7 +99,7 @@ default, so the file is safe to trim.
 | Section | Settings |
 |---|---|
 | `[names]` | The name pools — male and female first names, surnames, and settlement name prefixes/suffixes. Ships with Swedish names |
-| `[ollama]` | `base_url`, `model`, `timeout_ms`, `max_tokens`, `temperature`, `queue_capacity`, `health_check_interval_ticks`, `relationship_cap` |
+| `[ollama]` | `base_url`, `model`, `thinking`, `timeout_ms`, `max_tokens`, `temperature`, `queue_capacity`, `health_check_interval_ticks`, `relationship_cap` |
 | `[sexuality]` | `enable_sexuality` — false makes every villager heterosexual |
 | `[conversation]` | `display` (`overhead` / `chat` / `both`), `overhead_duration_ticks`, `max_distance`, `particles_while_talking` |
 | `[needs]` | `food_enabled` — whether settlements have to feed themselves |

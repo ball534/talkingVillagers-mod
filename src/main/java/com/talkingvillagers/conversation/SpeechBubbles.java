@@ -46,7 +46,7 @@ public final class SpeechBubbles {
 	 */
 	public void show(LivingEntity speaker, String text, int durationTicks) {
 		spawn(speaker, null, Component.literal(text).withStyle(ChatFormatting.WHITE),
-			140, text, durationTicks);
+			140, text, durationTicks, false, null);
 	}
 
 	/**
@@ -55,7 +55,31 @@ public final class SpeechBubbles {
 	 * are bickering") rather than as quoted speech, and so carry no speaker prefix.
 	 */
 	public void showNarration(LivingEntity anchor, String text, int durationTicks) {
-		spawn(anchor, null, narrationText(text), 110, text, durationTicks);
+		spawn(anchor, null, narrationText(text), 110, text, durationTicks, false, null);
+	}
+
+	/**
+	 * Shows an animated "{@code <name>} is thinking..." above {@code speaker}, for as long as
+	 * the speaker is composing their reply.
+	 *
+	 * <p>The dots flick while the model works. There is deliberately no time limit — a slow
+	 * model is exactly when a player most needs to see that the villager heard them — so the
+	 * indicator stays up until the answer's own speech bubble replaces it, {@link #remove}
+	 * clears it, or the speaker dies or unloads, which the regular sweep already handles.
+	 */
+	public void showThinking(LivingEntity speaker, String name) {
+		spawn(speaker, null, thinkingText(name, 0), 110, name + " is thinking…", 0, true, name);
+	}
+
+	private static Component narrationText(String text) {
+		return Component.literal(text).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
+	}
+
+	/** The thinking line for a given dot phase — 0, 1 or 2 dots after the words. */
+	private static Component thinkingText(String name, int phase) {
+		String dots = ".".repeat(phase + 1);
+		return Component.literal(name + " is thinking" + dots)
+			.withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
 	}
 
 	/**
@@ -68,11 +92,7 @@ public final class SpeechBubbles {
 	public void showBetween(LivingEntity one, LivingEntity two, String text, int durationTicks) {
 		// Clear both, so a pair cannot end up with a shared bubble and a leftover solo one.
 		remove(two.getUUID());
-		spawn(one, two, narrationText(text), 110, text, durationTicks);
-	}
-
-	private static Component narrationText(String text) {
-		return Component.literal(text).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
+		spawn(one, two, narrationText(text), 110, text, durationTicks, false, null);
 	}
 
 	/**
@@ -81,10 +101,12 @@ public final class SpeechBubbles {
 	 * @param partner            the second anchor, or null for a bubble over one head
 	 * @param backgroundAlpha    0-255 alpha of the text background
 	 * @param plainText          the unstyled text, checked for emptiness
+	 * @param thinking           true for a thinking indicator: no expiry, animated dots instead
+	 * @param thinkerName        the speaker's name, read only while thinking
 	 */
 	private void spawn(
 		LivingEntity anchor, @Nullable LivingEntity partner, Component content, int backgroundAlpha,
-		String plainText, int durationTicks
+		String plainText, int durationTicks, boolean thinking, @Nullable String thinkerName
 	) {
 		if (!(anchor.level() instanceof ServerLevel level) || plainText.isBlank()) {
 			return;
@@ -97,7 +119,10 @@ public final class SpeechBubbles {
 			return;
 		}
 
-		Bubble bubble = new Bubble(display, anchor, partner, level.getGameTime() + durationTicks);
+		// A thinking indicator has no deadline of its own — it lasts exactly as long as the
+		// wait it describes, however long the model takes.
+		Bubble bubble = new Bubble(display, anchor, partner,
+			thinking ? Long.MAX_VALUE : level.getGameTime() + durationTicks, thinking, thinkerName);
 		Vec3 position = bubble.anchorPosition();
 		display.snapTo(position.x, position.y, position.z, 0.0F, 0.0F);
 		display.setText(content);
@@ -145,6 +170,13 @@ public final class SpeechBubbles {
 				continue;
 			}
 
+			// A thinking indicator's text is a clock, not a line: the dots advance here rather
+			// than being rewritten by the caller, so the flick costs nothing when nobody waits.
+			if (bubble.thinking && level.getGameTime() % Tuning.Conversation.THINKING_FLICK_INTERVAL_TICKS == 0) {
+				long step = level.getGameTime() / Tuning.Conversation.THINKING_FLICK_INTERVAL_TICKS;
+				bubble.display.setText(thinkingText(bubble.thinkerName(), (int) (step % 3)));
+			}
+
 			Vec3 anchor = bubble.anchorPosition();
 			bubble.display.snapTo(anchor.x, anchor.y, anchor.z, 0.0F, 0.0F);
 		}
@@ -179,15 +211,26 @@ public final class SpeechBubbles {
 		 */
 		private final @Nullable LivingEntity partner;
 		private final long expiresAtGameTime;
+		/** True for a thinking indicator: no expiry, and its dots advance every few ticks. */
+		private final boolean thinking;
+		/** The speaker's name on a thinking indicator; null on an ordinary bubble. */
+		private final @Nullable String thinkerName;
 
 		private Bubble(
 			Display.TextDisplay display, LivingEntity speaker, @Nullable LivingEntity partner,
-			long expiresAtGameTime
+			long expiresAtGameTime, boolean thinking, @Nullable String thinkerName
 		) {
 			this.display = display;
 			this.speaker = speaker;
 			this.partner = partner;
 			this.expiresAtGameTime = expiresAtGameTime;
+			this.thinking = thinking;
+			this.thinkerName = thinkerName;
+		}
+
+		/** The name shown on a thinking indicator's line. */
+		private String thinkerName() {
+			return this.thinkerName == null ? "" : this.thinkerName;
 		}
 
 		/** Whether both participants are still around to anchor this bubble. */

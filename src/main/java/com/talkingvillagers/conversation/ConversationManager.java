@@ -195,6 +195,13 @@ public final class ConversationManager {
 		ConversationSession session, VillagerSoul soul, ServerLevel level, String situation
 	) {
 		session.setAwaitingReply(true);
+		// Show what the silence is while they compose their answer — but only overhead, since
+		// the indicator is floating text and a player who chose chat-only display asked for
+		// exactly that.
+		if (TalkingVillagers.config().conversation.display.overhead()) {
+			this.bubbles.showThinking(session.villager(), soul.identity().firstName());
+		}
+
 		UUID playerId = session.playerId();
 		String system = PromptBuilder.personaCard(session.villager(), soul, level);
 
@@ -223,6 +230,11 @@ public final class ConversationManager {
 			return;
 		}
 
+		// The thinking dots come down now, whatever the display preference: the reply's own
+		// bubble replaces them when speech is shown overhead, and a chat-only display must
+		// not leave an orphaned indicator over a villager who is no longer thinking.
+		this.bubbles.remove(session.villager().getUUID());
+
 		VillagerSoul soul = VillagerSouls.ensureSoul(session.villager(), level);
 		session.recordLine(soul.identity().firstName(), reply);
 		session.touch(level.getGameTime());
@@ -246,6 +258,9 @@ public final class ConversationManager {
 			return;
 		}
 		session.setAwaitingReply(false);
+		// Whatever the display preference, the dots were promise-keeping, not speech: with
+		// nobody about to answer, they must not hang over the villager indefinitely.
+		this.bubbles.remove(session.villager().getUUID());
 
 		ServerPlayer player = playerOf(playerId);
 		if (player == null) {

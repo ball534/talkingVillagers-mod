@@ -121,6 +121,13 @@ final class DefaultConfig {
 		base_url = "http://localhost:11434"
 		# Model used for villager speech. Any you have pulled, e.g. ["llama3.2:3b", "mistral", "qwen3:8b"]
 		model = "llama3.2:3b"
+		# Whether thinking models may reason before they answer. Their reasoning is steered by
+		# the villager's persona and the conversation, so replies come out more in character -
+		# at the cost of a slower answer, typically several seconds for a small thinking model.
+		# While a villager thinks, "Nils is thinking..." floats over their head. The mod asks
+		# Ollama for the extra tokens itself, so max_tokens stays the speech budget. Has no
+		# effect on models that cannot think.
+		thinking = true
 		# Milliseconds to wait for a reply before abandoning it. The villager just stays silent.
 		# The very first request also loads the model, which can take far longer than a reply.
 		timeout_ms = 30000
