@@ -211,6 +211,11 @@ public final class OllamaService implements AutoCloseable {
 		body.addProperty("system", request.system());
 		body.addProperty("prompt", request.user());
 		body.addProperty("stream", false);
+		// Thinking models emit their reasoning into a separate "thinking" field and will happily
+		// spend the whole token budget there — num_predict truncates the thought, "response"
+		// comes back empty, and the villager says nothing. Asking Ollama not to think routes
+		// every token to speech; for models that cannot think, this is a no-op.
+		body.addProperty("think", false);
 		// Ask Ollama to keep the model resident. Villages speak in bursts with long silences,
 		// and Ollama's five-minute default eviction means the villager who breaks a lull would
 		// otherwise wait out a full model load and time out.
