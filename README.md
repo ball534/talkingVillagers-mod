@@ -8,9 +8,9 @@ yourself.
 on your own machine. If Ollama is slow or missing, villagers simply go quiet; the server never
 blocks waiting on it.
 
-- **Minecraft** 26.2
-- **Loader** Fabric ≥ 0.19.3, Fabric API, Java 25
-- **Version** 1.0.0
+- **Minecraft** 26.3
+- **Loader** Fabric ≥ 0.19.5, Fabric API, Java 25
+- **Version** 2.0.0
 
 ## Vanilla clients can join
 
@@ -121,11 +121,12 @@ No EULA is needed for that — that only gates `runServer`.
 
 ## Notes for contributors
 
-Minecraft 26.2 dropped Yarn mappings, so this builds against **Mojang official mappings** and
-`build.gradle` has no `mappings` line. Writing villager or entity code from 1.20/1.21 memory
-produces code that does not compile, or worse, compiles and fails at runtime.
+Minecraft 26.2 dropped Yarn mappings, and 26.3 keeps it that way, so this builds against **Mojang
+official mappings** and `build.gradle` has no `mappings` line. Writing villager or entity code from
+1.20/1.21 memory produces code that does not compile, or worse, compiles and fails at runtime.
 
-`docs/mc-26.2-api-notes.md` records every API difference already found the hard way — read it before
+`docs/mc-26.2-api-notes.md` records every API difference already found the hard way, plus the 26.3
+deltas found during the port — read it before
 writing new code, and add to it rather than re-deriving. Ground truth comes from `./gradlew
 genSources`, which puts decompiled sources under
 `.gradle/loom-cache/minecraftMaven/net/minecraft/`.

@@ -14,6 +14,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.Filterable;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -65,8 +66,9 @@ public final class Books {
 			player.setItemInHand(hand, written);
 		} else {
 			// placeItemBackInInventory drops the item at the player's feet when there is no room,
-			// so the book is never silently destroyed by a full inventory.
-			player.getInventory().placeItemBackInInventory(written);
+			// so the book is never silently destroyed by a full inventory. SERVER_ONLY because the
+			// placement is driven from the server, as with vanilla's own MerchantMenu give-backs.
+			player.getInventory().placeItemBackInInventory(written, Prediction.SERVER_ONLY);
 		}
 		player.containerMenu.broadcastChanges();
 	}
